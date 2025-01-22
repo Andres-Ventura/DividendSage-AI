@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
 import requests
-from config import ALPHA_VANTAGE_API_KEY
+import yfinance as yf
 
 router = APIRouter(
     prefix="/api/dividends",
@@ -15,17 +15,20 @@ async def get_company_dividends(symbol: str) -> Dict[Any, Any]:
     Uses Alpha Vantage's TIME_SERIES_MONTHLY_ADJUSTED endpoint which
     includes dividend data
     """
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={symbol}&apikey={ALPHA_VANTAGE_API_KEY}"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={symbol}&apikey=Y1W0Q5VHJQIQBPT6"
 
     try:
         response = requests.get(url)
         data = response.json()
+        apple = yf.Ticker("aapl").tolist()
+
+        print(f"apple: {apple}")
 
         if "Error Message" in data:
             raise HTTPException(status_code=404, detail=f"No dividend data found for symbol {symbol}")
         
         # Extract monthly data
-        monthly_data = data.get("Monthly Time Series", {})
+        monthly_data = data.get("Monthly Adjusted Time Series", {})
 
         # Format dividend data
         dividend_history = []
@@ -36,10 +39,13 @@ async def get_company_dividends(symbol: str) -> Dict[Any, Any]:
                     "date": date,
                     "amount": dividend_amount
                 })
-        
+
         return {
             "symbol": symbol,
-            "dividend_history": dividend_history
+            "dividend_history": dividend_history,
+            "yfinance_data": {
+                "dividends": apple.dividends
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -51,7 +57,7 @@ async def get_dividend_stats(symbol: str) -> Dict[Any, Any]:
     Get dividend statistics for a company including yield, frequency, and growth
     Uses Alpha Vantage's OVERVIEW endpoint which includes dividend-related metrics
     """
-    url = f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={ALPHA_VANTAGE_API_KEY}"
+    url = f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey=Y1W0Q5VHJQIQBPT6"
 
     try:
         response = requests.get(url)

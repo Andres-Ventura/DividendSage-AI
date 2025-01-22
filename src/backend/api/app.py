@@ -37,7 +37,7 @@ async def global_exception_handler(request, exc):
 
 # Root endpoint
 @app.get("/")
-async def root():Simon Kjaer
+async def root():
     return {
         "name": "DividendSage AI API",
         "version": "1.0.0",

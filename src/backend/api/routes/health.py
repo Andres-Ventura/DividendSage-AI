@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 import requests
-from config import ALPHA_VANTAGE_API_KEY
 
 router = APIRouter(
     prefix="/api/health",
@@ -31,7 +30,7 @@ def check_alpha_vantage_status():
     """
     try:
         # Use a simple request to test API availablility
-        test_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey={ALPHA_VANTAGE_API_KEY}"
+        test_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=Y1W0Q5VHJQIQBPT6"
         response = requests.get(test_url, timeout=5)
         
         if response.status_code == 200:
