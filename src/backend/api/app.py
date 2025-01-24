@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 import os
+import sys
+from pathlib import Path
 
-# Import routes
+root_dir = str(Path(__file__).parent.parent.parent)
+sys.path.append(root_dir)
+
 from routes import dividends, health
 
 # Create FastAPI app
