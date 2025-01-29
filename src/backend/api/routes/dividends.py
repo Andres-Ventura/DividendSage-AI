@@ -12,3 +12,7 @@ router = APIRouter(
     tags=["dividends"],
     # dependencies=[Depends()]
 )
+
+@router.route("/{symbol}/insights")
+async def insights():
+    pass

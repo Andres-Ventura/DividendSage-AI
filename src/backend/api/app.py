@@ -9,6 +9,7 @@ from pathlib import Path
 root_dir = str(Path(__file__).parent.parent.parent)
 sys.path.append(root_dir)
 
+from backend.api.routes import insight_requests
 from routes import dividends, health
 
 # Create FastAPI app
@@ -30,6 +31,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(dividends.router)
+app.include_router(insight_requests.router)
 
 # Global exception handler
 @app.exception_handler(Exception)
