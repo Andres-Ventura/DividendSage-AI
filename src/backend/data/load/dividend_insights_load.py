@@ -13,25 +13,37 @@ class DividendInsightsLoader:
         self.transformer = DividendInsightsTransform()
         self.data_provider = CombinedDataProvider()
 
-    def load_data_and_train_model(self, symbol: str, uploaded_file: Optional[str] = None):
+    async def load_data_and_train_model(self, symbol: str, uploaded_file: Optional[str] = None):
         """
         Fetch, transform, and load data into a CSV file, then train the model.
         """
-        # Fetch data from the combined provider
-        raw_data = self.data_provider.fetch_combined_data(symbol, uploaded_file)
+        try:
+            # Fetch data from the combined provider
+            raw_data = await self.data_provider.fetch_combined_data(symbol, uploaded_file)
 
-        # Preprocess and transform the data
-        unified_data = self.transformer.preprocess_data(raw_data)
-        engineered_data = self.transformer.feature_engineering(unified_data)
+            # Preprocess and transform the data
+            unified_data = await self.transformer.preprocess_data(raw_data)
 
-        # Save data to a CSV file
-        engineered_data.to_csv(self.output_path, index=False)
-        print(f"Data successfully saved to '{self.output_path}'.")
+            if unified_data is None or unified_data.empty:
+                raise ValueError("Data preprocessing failed")
 
-        # Train the model
-        print("Starting model training...")
-        self.transformer.train_model(engineered_data)
-        print("Model training completed.")
+            engineered_data = await self.transformer.feature_engineering(unified_data)
+            
+            if engineered_data is None or engineered_data.empty:
+                raise ValueError("Feature engineering failed")
+
+            # Save data to a CSV file
+            engineered_data.to_csv(self.output_path, index=False)
+            
+            print(f"Data successfully saved to '{self.output_path}'.")
+            
+            print("Starting model training...")
+            self.transformer.train_model(engineered_data)
+            print("Model training completed.")
+
+        except Exception as e:
+            print(f"Error in load_data_and_train_model: {str(e)}")
+            raise  # Re-raise the exception for the global handler to catch
 
     def generate_insights(self, symbol: str, uploaded_file: Optional[str] = None):
         """

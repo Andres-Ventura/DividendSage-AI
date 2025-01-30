@@ -1,6 +1,6 @@
+import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-import numpy as np
 
 class DividendForecastModel:
     def __init__(self):

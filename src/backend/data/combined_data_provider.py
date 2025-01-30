@@ -15,7 +15,7 @@ class CombinedDataProvider:
         self.upload_parser = FileUploadParser()
         self.yfinance_provider = None  # Initialized dynamically per symbol
 
-    async def fetch_combined_data(self, symbol: str, uploaded_file: Optional[str] = None) -> Dict[str, Any]:
+    async def fetch_combined_data(self, symbol: str, uploaded_file: Optional[str] = None) -> dict[str, Any]:
         """
         Fetch and aggregate data from multiple sources.
 
@@ -56,6 +56,7 @@ class CombinedDataProvider:
                 },
                 "uploaded_data": uploaded_data,
             }
+
             return combined_data
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to fetch combined data: {str(e)}")

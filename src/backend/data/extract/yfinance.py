@@ -26,10 +26,14 @@ class YFinanceAPI():
             pandas.DataFrame: Historical market data for the specified period and interval.
         """
         
-        ticker = yf.Ticker(self.symbol)
-        historical_data = ticker.history(period=period, interval=interval)
-        
-        return historical_data
+        try:
+            ticker = yf.Ticker(self.symbol)
+            historical_data = ticker.history(period=period, interval=interval)
+            if historical_data.empty:
+                raise HTTPException(status_code=404, detail=f"No data found for symbol {self.symbol}")
+            return historical_data
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
     
     def get_dividends_and_splits_yf(self):
         """
@@ -46,20 +50,46 @@ class YFinanceAPI():
         }
     
     def get_corporate_actions_yf(self):
-        """
-        Get information on annual and quarterly earnings
-        """
+        try:
+            ticker = yf.Ticker(self.symbol)
         
-        ticker = yf.Ticker(self.symbol)
-        earnings = ticker.earnings
-        quarterly_earnings = ticker.quarterly_earnings
-        financials = ticker.financials
+            # Fetch annual earnings (use income statement for "Net Income")
+            income_stmt = ticker.income_stmt
+            yearly_earnings = income_stmt.loc["Net Income"] if "Net Income" in income_stmt.index else None
         
-        return {
-            "annual_earnings": earnings, 
-            "quarterly_earnings": quarterly_earnings,
-            "financials": financials
-        }
+            # Fetch quarterly earnings dates and EPS (returns DataFrame with EPS data)
+            quarterly_earnings = ticker.earnings_dates
+        
+            # Fetch financials (annual by default; pass False for quarterly)
+            financials_annual = ticker.get_income_stmt()
+            financials_quarterly = ticker.get_income_stmt(False)
+        
+            # Handle NaN values
+            if yearly_earnings is not None:
+                yearly_earnings = yearly_earnings.fillna(0)
+                quarterly_earnings = quarterly_earnings.fillna(0)
+                financials_annual = financials_annual.fillna(0)
+                financials_quarterly = financials_quarterly.fillna(0)
+        
+            if yearly_earnings is None or quarterly_earnings.empty:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"No corporate actions data found for {self.symbol}"
+                )
+                
+            # Log the return values for debugging with better formatting        
+            return {
+                "yearly_earnings": yearly_earnings,
+                "quarterly_earnings": quarterly_earnings,
+                "financials_annual": financials_annual,
+                "financials_quarterly": financials_quarterly
+            }
+        
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error fetching data: {str(e)}"
+            )
     
     def get_analyst_recommendations_yf(self):
         """
