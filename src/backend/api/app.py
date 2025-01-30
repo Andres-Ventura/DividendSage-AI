@@ -1,10 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 import os
 import sys
 from pathlib import Path
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 root_dir = str(Path(__file__).parent.parent.parent)
 sys.path.append(root_dir)
@@ -33,9 +38,10 @@ app.include_router(health.router)
 app.include_router(dividends.router)
 app.include_router(insight_requests.router)
 
-# Global exception handler
+# Enhanced global exception handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Exception occurred: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
@@ -58,5 +64,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         reload=True if os.getenv("ENVIRONMENT") == "development" else False,
-        workers=int(os.getenv("WORKERS", 1))
+        workers=1,  # Set to 1 for development to avoid reload issues
+        reload_delay=1,  # Add a small delay between reloads
+        log_level="debug"  # Increase logging detail
     )

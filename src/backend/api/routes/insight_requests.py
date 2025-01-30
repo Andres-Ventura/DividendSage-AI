@@ -26,7 +26,7 @@ async def train_model(request: InsightsRequest):
     Endpoint to fetch, preprocess, transform data, train the model, and save it.
     """
     try:
-        loader.load_data_and_train_model(request.symbol, request.uploaded_file)
+        await loader.load_data_and_train_model(request.symbol, request.uploaded_file)
         return {"message": "Model trained successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
@@ -38,7 +38,7 @@ async def generate_insights(request: InsightsRequest):
     Endpoint to generate and retrieve dividend insights after model training.
     """
     try:
-        insights = loader.generate_insights(request.symbol, request.uploaded_file)
+        insights = await loader.generate_insights(request.symbol, request.uploaded_file)
         return {"insights": insights.to_dict(orient="records")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
