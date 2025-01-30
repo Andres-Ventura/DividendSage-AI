@@ -1,4 +1,6 @@
+import logging
 from typing import Dict, Any, Optional
+import pandas as pd
 import yfinance as yf
 from fastapi import HTTPException
 
@@ -49,48 +51,77 @@ class YFinanceAPI():
             "splits": splits
         }
     
-    def get_corporate_actions_yf(self):
+    def get_corporate_actions_yf(self) -> dict:
+        """
+    Fetch corporate actions including dividends, stock splits, and earnings data from Yahoo Finance.
+
+    Returns:
+        dict: Processed corporate actions data.
+    """
         try:
             ticker = yf.Ticker(self.symbol)
         
-            # Fetch annual earnings (use income statement for "Net Income")
-            income_stmt = ticker.income_stmt
-            yearly_earnings = income_stmt.loc["Net Income"] if "Net Income" in income_stmt.index else None
-        
-            # Fetch quarterly earnings dates and EPS (returns DataFrame with EPS data)
-            quarterly_earnings = ticker.earnings_dates
-        
-            # Fetch financials (annual by default; pass False for quarterly)
-            financials_annual = ticker.get_income_stmt()
-            financials_quarterly = ticker.get_income_stmt(False)
-        
-            # Handle NaN values
-            if yearly_earnings is not None:
-                yearly_earnings = yearly_earnings.fillna(0)
-                quarterly_earnings = quarterly_earnings.fillna(0)
-                financials_annual = financials_annual.fillna(0)
-                financials_quarterly = financials_quarterly.fillna(0)
-        
-            if yearly_earnings is None or quarterly_earnings.empty:
-                raise HTTPException(
-                    status_code=404, 
-                    detail=f"No corporate actions data found for {self.symbol}"
-                )
+            # Process dividends and stock splits
+            dividends = ticker.dividends.reset_index()
+            dividends.columns = ["date", "amount"]
+            dividends_dict = dividends.to_dict(orient="records")
+
+            splits = ticker.splits.reset_index()
+            splits.columns = ["date", "split_ratio"]
+            splits_dict = splits.to_dict(orient="records")
+
+            # Initialize earnings data structures
+            quarterly_earnings = pd.DataFrame()
+            annual_earnings = []
+
+            # Fetch and process quarterly earnings
+            try:
+                quarterly_earnings = ticker.earnings_dates
+                if not quarterly_earnings.empty:
+                    # Dynamically handle column names to avoid KeyError
+                    rename_mapping = {}
+                    if "Earnings Date" in quarterly_earnings.columns:
+                        rename_mapping["Earnings Date"] = "date"
+                    if "EPS Estimate" in quarterly_earnings.columns:
+                        rename_mapping["EPS Estimate"] = "eps_estimate"
+                    if "Reported EPS" in quarterly_earnings.columns:
+                        rename_mapping["Reported EPS"] = "reported_eps"
+                    if "Surprise(%)" in quarterly_earnings.columns:
+                        rename_mapping["Surprise(%)"] = "surprise_pct"
                 
-            # Log the return values for debugging with better formatting        
+                    quarterly_earnings = quarterly_earnings.rename(columns=rename_mapping)
+                    quarterly_earnings = quarterly_earnings.reset_index()
+                    quarterly_earnings["date"] = quarterly_earnings["date"].dt.strftime("%Y-%m-%d")
+            except KeyError as ke:
+                logging.error(f"KeyError encountered while processing earnings data: {ke}. Data may be incomplete.")
+            except Exception as e:
+                logging.error(f"Error fetching quarterly earnings data: {e}")
+
+            # Fetch and process annual earnings (example, adjust as needed)
+            try:
+                annual_earnings_df = ticker.earnings
+                if not annual_earnings_df.empty:
+                    annual_earnings_df = annual_earnings_df.reset_index()
+                    annual_earnings_df["Year"] = annual_earnings_df["Year"].astype(str)
+                    annual_earnings = annual_earnings_df.to_dict(orient="records")
+            except Exception as e:
+                logging.error(f"Error fetching annual earnings data: {e}")
+
             return {
-                "yearly_earnings": yearly_earnings,
-                "quarterly_earnings": quarterly_earnings,
-                "financials_annual": financials_annual,
-                "financials_quarterly": financials_quarterly
+                "dividends": dividends_dict,
+                "splits": splits_dict,
+                "earnings": {
+                    "quarterly": quarterly_earnings.to_dict(orient="records") if not quarterly_earnings.empty else [],
+                    "annual": annual_earnings
+                }
             }
-        
         except Exception as e:
+            logging.error(f"Unexpected error in get_corporate_actions_yf: {e}", exc_info=True)
             raise HTTPException(
-                status_code=500, 
-                detail=f"Error fetching data: {str(e)}"
+                status_code=500,
+                detail=f"Error fetching corporate actions data: {str(e)}"
             )
-    
+        
     def get_analyst_recommendations_yf(self):
         """
         Detailed report of analyst recommendations on a company

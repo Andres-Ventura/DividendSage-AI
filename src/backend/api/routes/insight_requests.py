@@ -20,16 +20,16 @@ OUTPUT_CSV_PATH = "dividend_insights.csv"
 loader = DividendInsightsLoader(OUTPUT_CSV_PATH)
 
 # Route for training the model
-@router.post("/train_model")
-async def train_model(request: InsightsRequest):
-    """
-    Endpoint to fetch, preprocess, transform data, train the model, and save it.
-    """
-    try:
-        await loader.load_data_and_train_model(request.symbol, request.uploaded_file)
-        return {"message": "Model trained successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+# @router.post("/train_model")
+# async def train_model(request: InsightsRequest):
+#     """
+#     Endpoint to fetch, preprocess, transform data, train the model, and save it.
+#     """
+#     try:
+#         await loader.load_data_and_train_model(request.symbol, request.uploaded_file)
+#         return {"message": "Model trained successfully"}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
 # Route for generating insights
 @router.post("/generate_insights")
