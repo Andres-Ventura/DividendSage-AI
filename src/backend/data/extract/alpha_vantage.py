@@ -34,6 +34,7 @@ class AlphaVantageProvider(FinancialDataProvider):
             "function": "TIME_SERIES_MONTHLY_ADJUSTED",
             "outputsize": "compact"
         })
+        
         monthly_data = data.get("Monthly Adjusted Time Series", {})
 
         dividend_history = [

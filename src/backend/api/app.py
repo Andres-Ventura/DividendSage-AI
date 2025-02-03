@@ -64,7 +64,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         reload=True if os.getenv("ENVIRONMENT") == "development" else False,
-        workers=1,  # Set to 1 for development to avoid reload issues
-        reload_delay=1,  # Add a small delay between reloads
-        log_level="debug"  # Increase logging detail
+        workers=1,
+        reload_delay=1,
+        log_level="debug"
     )

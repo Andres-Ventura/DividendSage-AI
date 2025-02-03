@@ -10,9 +10,9 @@ load_dotenv()
 router = APIRouter(
     prefix="/dividends",
     tags=["dividends"],
-    # dependencies=[Depends()]
 )
 
-@router.route("/{symbol}/insights")
-async def insights():
+
+@router.route("/{symbol}/dividends")
+async def dividends():
     pass

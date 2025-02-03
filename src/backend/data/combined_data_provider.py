@@ -59,7 +59,7 @@ class CombinedDataProvider:
             if uploaded_file:
                 logging.info(f"Parsing uploaded file: {uploaded_file}")
                 uploaded_data = self.upload_parser.parse_file(uploaded_file)
-                logging.debug(f"Upload data parsed: {bool(uploaded_data)}")
+                logging.info(f"uploaded_data: {uploaded_data}")
 
             # Combine data into a unified format
             combined_data = {

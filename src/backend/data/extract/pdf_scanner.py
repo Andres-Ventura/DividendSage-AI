@@ -105,11 +105,9 @@ class FileUploadParser:
         dividend_data = []
 
         try:
-            # Normalize text for consistent processing
-            text = re.sub(r'\s+', ' ', raw_data)  # Collapse whitespace
-            text = text.replace(u'\xa0', ' ')  # Handle non-breaking spaces
+            text = re.sub(r'\s+', ' ', raw_data)
+            text = text.replace(u'\xa0', ' ')
 
-            # 1. Locate Cash Flows section using flexible matching
             cf_section = re.search(
                 r'(CONSOLIDATED STATEMENTS? OF CASH FLOWS?.*?)'
                 r'(?=CONSOLIDATED STATEMENT|CONSOLIDATED BALANCE|$)', 
@@ -123,7 +121,6 @@ class FileUploadParser:
 
             cf_content = cf_section.group(1)
 
-            # 2. Extract reporting periods from header
             period_dates = re.findall(
                 r'(?:Three|Twelve) Months Ended\s*([A-Z][a-z]+ \d{1,2}, \d{4})',
                 cf_content
